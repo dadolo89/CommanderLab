@@ -3,7 +3,8 @@
 from src.card import Card, Color, CardType
 from src.land import Land
 from src.deck import Deck
-from src.parser import DeckParser
+from src.player import Player
+from src.constants import GameConstants
 
 
 def initialize_sample_deck() -> Deck:
@@ -77,25 +78,45 @@ def main():
     else:
         print(f"❌ Deck is invalid ({len(deck.main_deck)} cards, expected 100)")
     
+    # Create player
+    print("\n👤 Creating player...")
+    player = Player("Player 1", deck, player_id=0)
+    print(f"✅ Player created: {player}")
+    print(f"   Starting life: {GameConstants.STARTING_LIFE_TOTAL}")
+    
     # Shuffle and draw opening hand
     print("\n🔀 Shuffling deck...")
     deck.shuffle()
     print(f"✅ Deck shuffled (Library size: {deck.get_deck_size()})")
     
     print("\n📥 Drawing opening hand (7 cards)...")
-    opening_hand = deck.draw(7)
+    opening_hand = player.deck.draw(GameConstants.OPENING_HAND_SIZE)
     print(f"✅ Opening hand ({len(opening_hand)} cards):")
     for card in opening_hand:
         print(f"   - {card}")
     
     print(f"\n📊 Game State:")
-    print(f"   Hand: {len(deck.hand)} cards")
-    print(f"   Library: {deck.get_deck_size()} cards")
-    print(f"   Battlefield: {len(deck.battlefield)} cards")
-    print(f"   Graveyard: {len(deck.graveyard)} cards")
+    print(f"   Life: {player.life_total}")
+    print(f"   Hand: {player.get_hand_size()} cards")
+    print(f"   Library: {player.deck.get_deck_size()} cards")
+    print(f"   Battlefield: {player.get_battlefield_count()} cards")
+    print(f"   Graveyard: {player.get_graveyard_count()} cards")
+    
+    # Simulate some damage
+    print("\n💥 Simulating damage...")
+    player.take_damage(5)
+    print(f"✅ Player took 5 damage: {player.life_total} life remaining")
+    
+    # Simulate life gain
+    print("\n💚 Simulating life gain...")
+    player.gain_life(3)
+    print(f"✅ Player gained 3 life: {player.life_total} life total")
+    
+    # Check if alive
+    print(f"\n🔍 Player status: {'Alive ✅' if player.is_alive() else 'Defeated ❌'}")
     
     print("\n🚀 Ready to simulate!")
-    print("(More features coming soon...)")
+    print("(More features coming in Commit 2...)")
 
 
 if __name__ == "__main__":
