@@ -6,6 +6,7 @@ from src.deck import Deck
 from src.player import Player
 from src.simulator import CommanderSimulator
 from src.constants import GameConstants
+import random
 
 
 def initialize_sample_deck() -> Deck:
@@ -62,9 +63,25 @@ def initialize_sample_deck() -> Deck:
     return deck
 
 
+def simulate_combat(simulator: CommanderSimulator, turn_number: int) -> None:
+    """Simulate some random combat damage for variety."""
+    # Every few turns, have some players take damage
+    if turn_number % 3 == 0:
+        attacker_idx = random.randint(0, len(simulator.players) - 1)
+        defender_idx = random.randint(0, len(simulator.players) - 1)
+        
+        # Make sure they're different players
+        if attacker_idx != defender_idx:
+            damage = random.randint(3, 8)
+            simulator.players[defender_idx].take_damage(damage)
+            print(f"\n⚔️ {simulator.players[attacker_idx].name} attacks {simulator.players[defender_idx].name} for {damage} damage!")
+
+
 def main():
-    """Main game loop."""
+    """Main game loop with 12-15 turn complete game."""
     print("🎮 Welcome to CommanderLab Simulator!")
+    print("="*60)
+    print("📋 Starting a complete 4-player Commander match (12-15 turns)")
     print("="*60)
     
     # Create 4 players
@@ -88,16 +105,38 @@ def main():
     # Start game
     simulator.start()
     
-    # Simulate first 3 turns
-    print("\n🚀 Simulating 3 turns...")
-    for turn_num in range(1, 4):
+    # Simulate 12-15 turns (complete game)
+    target_turns = random.randint(12, 15)
+    print(f"\n🚀 Simulating {target_turns} turns for a complete match...\n")
+    
+    for turn_num in range(1, target_turns + 1):
+        # Simulate some combat damage
+        simulate_combat(simulator, turn_num)
+        
+        # Execute the turn
         if not simulator.next_turn():
+            print(f"\n⏹️ Game ended on turn {turn_num}!")
+            break
+        
+        # Check if any player is eliminated
+        alive_count = sum(1 for p in players if p.is_alive())
+        if alive_count <= 1:
+            print(f"\n⏹️ Game ended - Only one player remaining!")
             break
     
     # Display final status
+    print("\n" + "="*60)
+    print("📊 FINAL GAME STATUS")
+    print("="*60)
     print(simulator.get_game_status())
-    print("✅ Simulation complete!")
-    print("(More features coming in Commit 3...)")
+    
+    # Show survivors
+    print("\n🏆 SURVIVORS:")
+    for player in players:
+        status = "✅ ALIVE" if player.is_alive() else "❌ DEFEATED"
+        print(f"   {player.name}: {player.life_total} life - {status}")
+    
+    print("\n✅ Complete simulation finished!")
 
 
 if __name__ == "__main__":
