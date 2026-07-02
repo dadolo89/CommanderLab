@@ -1,4 +1,4 @@
-"""Main entry point for Commander Simulator with interactive gameplay."""
+"""Main entry point for Commander Simulator with trigger system."""
 
 from src.card import Card, Color, CardType
 from src.land import Land
@@ -6,26 +6,28 @@ from src.deck import Deck
 from src.player import Player
 from src.simulator import CommanderSimulator
 from src.ai import AIPlayer
-from src.combat import CombatPhase
-from src.constants import GameConstants
+from src.triggers import TriggerManager, TriggerEvent, TriggerType
+from src.doom_abilities import create_doom_card, DoomAbilities
+from src.bone_miser import create_bone_miser_card
+from src.living_laser import create_living_laser_card
+from src.currency_converter import create_currency_converter_card
+from src.archfiend import create_archfiend_card
 import random
 
 
-def initialize_sample_deck() -> Deck:
-    """Create a sample deck for testing."""
-    # Create commander
-    commander = Card(
-        name="Doctor Doom, King of Latveria",
-        mana_cost=4,
-        colors=[Color.BLUE, Color.BLACK, Color.RED],
-        card_type=CardType.CREATURE,
-        power=4,
-        toughness=5,
-        set_code="MSC",
-        collector_number="6",
-    )
+def initialize_deck_with_triggers(player: Player = None) -> Deck:
+    """Create a deck with triggered cards.
+    
+    Args:
+        player: Player who owns this deck
+        
+    Returns:
+        Deck with trigger cards
+    """
+    # Create commander (Doom with triggers)
+    commander = create_doom_card(player)
 
-    # Create some basic cards
+    # Create deck with trigger cards
     cards = [
         # Lands (36 cards)
         *[Land("Island", [Color.BLUE], set_code="MSH", collector_number="289") for _ in range(2)],
@@ -36,7 +38,13 @@ def initialize_sample_deck() -> Deck:
         Land("Drowned Catacomb", [Color.BLUE, Color.BLACK], set_code="MSC", collector_number="239"),
         Land("Sulfur Falls", [Color.BLUE, Color.RED], set_code="MSC", collector_number="269"),
         
-        # Spells
+        # Trigger cards
+        create_bone_miser_card(player),
+        create_living_laser_card(player),
+        create_currency_converter_card(player),
+        create_archfiend_card(player),
+        
+        # Other spells
         Card(
             name="Counterspell",
             mana_cost=2,
@@ -65,91 +73,51 @@ def initialize_sample_deck() -> Deck:
     return deck
 
 
-def simulate_ai_turn(simulator: CommanderSimulator, ai_player: AIPlayer, turn_number: int) -> None:
-    """Simulate an AI player's turn with decision-making.
-    
-    Args:
-        simulator: The game simulator
-        ai_player: The AI player
-        turn_number: Current turn number
-    """
-    print(f"\n{ai_player.get_ai_action_description()}")
-    
-    # AI decides to play a land
-    if ai_player.should_play_land():
-        land = ai_player.choose_land_to_play()
-        if land:
-            ai_player.player.deck.hand.remove(land)
-            ai_player.player.deck.battlefield.append(land)
-            ai_player.lands_played_this_turn += 1
-            print(f"🌍 {ai_player.player.name} plays {land.name}")
-    
-    # AI decides to play commander
-    if ai_player.should_play_commander():
-        commander = ai_player.player.deck.commander
-        if commander in ai_player.player.deck.hand:
-            ai_player.player.deck.hand.remove(commander)
-            ai_player.player.deck.battlefield.append(commander)
-            print(f"👑 {ai_player.player.name} casts their commander {commander.name}!")
-    
-    # AI decides to cycle cards
-    if ai_player.should_cycle_cards():
-        card = ai_player.choose_card_to_cycle()
-        if card:
-            print(f"🔄 {ai_player.player.name} cycles {card.name}")
-    
-    # AI decides to attack
-    other_players = [p for p in simulator.players if p.player_id != ai_player.player.player_id]
-    if other_players and ai_player.player.get_battlefield_count() > 0:
-        target = random.choice(other_players)
-        if ai_player.should_attack(target):
-            damage = random.randint(2, 5)
-            print(f"⚔️ {ai_player.player.name} attacks {target.name} for {damage} damage!")
-            if target.take_damage(damage):
-                print(f"💀 {target.name} has been defeated!")
-
-
-def player_turn_menu() -> str:
-    """Display player turn menu and get input.
-    
-    Returns:
-        User choice
-    """
-    print("\n📋 Your Turn Options:")
-    print("  1. Play a land")
-    print("  2. Cast your commander")
-    print("  3. Attack with creatures")
-    print("  4. Use an instant")
-    print("  5. Pass priority")
-    print("  6. View game status")
-    
-    choice = input("\nChoose action (1-6): ").strip()
-    return choice
-
-
 def main():
-    """Main game loop with interactive player vs AI."""
-    print("🎮 Welcome to CommanderLab Simulator!")
+    """Main game loop with trigger system."""
+    print("🎮 Welcome to CommanderLab Simulator - Trigger System Edition!")
     print("="*60)
-    print("📋 4-Player Commander Match: You vs 3 AI Opponents")
+    print("📚 4-Player Commander Match with Advanced Triggers")
     print("="*60)
+    print("\nCards with Triggers:")
+    print("  👑 Doctor Doom (Damage tokens, draw, search)")
+    print("  💀 Bone Miser (Discard tokens)")
+    print("  ⚡ Living Laser (Charge counters)")
+    print("  💱 Currency Converter (Treasure tokens)")
+    print("  😈 Archfiend (Life drain)")    
+    print("="*60)
+    
+    # Create trigger manager (global)
+    trigger_manager = TriggerManager()
     
     # Create players
-    deck1 = initialize_sample_deck()
-    player1 = Player("You (dadolo89)", deck1, player_id=0)
+    player1 = Player("You (dadolo89)", None, player_id=0)
+    deck1 = initialize_deck_with_triggers(player1)
+    player1.deck = deck1
     
-    deck2 = initialize_sample_deck()
-    player2 = Player("Player 2 (AI)", deck2, player_id=1)
+    player2 = Player("Player 2 (AI)", None, player_id=1)
+    deck2 = initialize_deck_with_triggers(player2)
+    player2.deck = deck2
     
-    deck3 = initialize_sample_deck()
-    player3 = Player("Player 3 (AI)", deck3, player_id=2)
+    player3 = Player("Player 3 (AI)", None, player_id=2)
+    deck3 = initialize_deck_with_triggers(player3)
+    player3.deck = deck3
     
-    deck4 = initialize_sample_deck()
-    player4 = Player("Player 4 (AI)", deck4, player_id=3)
+    player4 = Player("Player 4 (AI)", None, player_id=3)
+    deck4 = initialize_deck_with_triggers(player4)
+    player4.deck = deck4
     
     players = [player1, player2, player3, player4]
     
-    # Create AI players for opponents
+    # Register all triggers
+    print("\n🔔 Registering card triggers...\n")
+    for player in players:
+        for card in player.deck.get_all_cards():
+            if hasattr(card, 'triggered_abilities'):
+                for trigger in card.triggered_abilities.get_triggers():
+                    trigger_manager.register_trigger(trigger)
+    
+    # Create AI players
     ai_players = {
         1: AIPlayer(player2, difficulty="normal"),
         2: AIPlayer(player3, difficulty="normal"),
@@ -158,15 +126,15 @@ def main():
     
     # Create simulator
     simulator = CommanderSimulator(players)
+    simulator.trigger_manager = trigger_manager  # Attach to simulator
     
     # Start game
     simulator.start()
     
-    # Simulate 12-15 turns with interaction
-    target_turns = random.randint(12, 15)
-    print(f"\n🚀 Starting game with {target_turns} turns (AI will auto-play)\n")
+    # Simulate 8-10 turns with triggers
+    target_turns = random.randint(8, 10)
+    print(f"\n🚀 Starting game with {target_turns} turns (Triggers enabled!)\n")
     
-    turn_count = 0
     for turn_num in range(1, target_turns + 1):
         current_player = simulator.game.get_current_player()
         
@@ -175,28 +143,34 @@ def main():
         print(f"{'='*60}")
         
         # Execute each phase
-        phases = [
-            "UNTAP",
-            "UPKEEP",
-            "DRAW",
-            "MAIN_1",
-            "COMBAT",
-            "MAIN_2",
-            "ENDING",
-            "CLEANUP",
-        ]
+        phases = ["UNTAP", "UPKEEP", "DRAW", "MAIN_1", "COMBAT", "MAIN_2", "ENDING", "CLEANUP"]
         
         for phase in phases:
             simulator.game.execute_phase()
             
-            # If it's the player's main phase, show menu (simplified)
-            if current_player.player_id == 0 and phase in ["MAIN_1", "MAIN_2"]:
-                print(f"\n💡 It's your {phase.lower()} phase")
-                print(f"📊 Your Life: {current_player.life_total} | Hand: {current_player.get_hand_size()} cards")
+            # Simulate trigger events
+            if phase == "DRAW":
+                # Fire draw event
+                event = TriggerEvent(TriggerType.ON_DRAW, current_player, None, 1)
+                trigger_manager.fire_event(event)
             
-            # If it's an AI player's turn, simulate their decisions
-            elif current_player.player_id in ai_players and phase in ["MAIN_1", "MAIN_2"]:
-                simulate_ai_turn(simulator, ai_players[current_player.player_id], turn_num)
+            elif phase == "COMBAT" and random.random() < 0.6:
+                # Simulate combat damage
+                other_players = [p for p in players if p.player_id != current_player.player_id]
+                if other_players:
+                    target = random.choice(other_players)
+                    damage = random.randint(3, 7)
+                    
+                    # Fire damage event
+                    event = TriggerEvent(TriggerType.ON_DAMAGE_DEALT, current_player, target, damage)
+                    trigger_manager.fire_event(event)
+                    
+                    target.take_damage(damage)
+            
+            elif phase == "END_STEP":
+                # Fire end step event
+                event = TriggerEvent(TriggerType.ON_END_STEP, current_player)
+                trigger_manager.fire_event(event)
             
             simulator.game.advance_phase()
         
@@ -205,24 +179,20 @@ def main():
         if winner:
             print(f"\n🏆 GAME OVER! {winner.name} wins!")
             break
-        
-        turn_count += 1
     
     # Display final status
     print("\n" + "="*60)
-    print("📊 FINAL GAME STATUS")
+    print("📊 FINAL STATUS")
     print("="*60)
     print(simulator.get_game_status())
     
-    # Show survivors and strategies
-    print("\n🏆 FINAL RESULTS:")
+    print("\n🏆 SURVIVORS:")
     for player in players:
         status = "✅ ALIVE" if player.is_alive() else "❌ DEFEATED"
-        strategy = ai_players[player.player_id].strategy if player.player_id in ai_players else "Player"
         print(f"   {player.name}: {player.life_total} life - {status}")
     
     print("\n✅ Simulation complete!")
-    print("(Commit 3: Interactive combat, AI decision-making, and instant system implemented!)")
+    print("(Commit 4: Advanced trigger system with Doom, Bone Miser, Living Laser, Currency Converter, and Archfiend!)")
 
 
 if __name__ == "__main__":
