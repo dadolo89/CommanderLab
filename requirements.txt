@@ -1,0 +1,5 @@
+# Commander Simulator Dependencies
+# Python 3.9+
+
+# No external dependencies required for MVP
+# Future: scryfall-sdk, requests for API integration
