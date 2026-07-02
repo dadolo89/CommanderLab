@@ -4,6 +4,7 @@ from src.card import Card, Color, CardType
 from src.land import Land
 from src.deck import Deck
 from src.player import Player
+from src.simulator import CommanderSimulator
 from src.constants import GameConstants
 
 
@@ -62,61 +63,35 @@ def initialize_sample_deck() -> Deck:
 
 
 def main():
-    """Main game loop (WIP)."""
+    """Main game loop."""
     print("🎮 Welcome to CommanderLab Simulator!")
-    print("="*50)
+    print("="*60)
     
-    # Initialize deck
-    deck = initialize_sample_deck()
-    print(f"✅ Deck loaded: {deck}")
-    print(f"   Commander: {deck.commander}")
-    print(f"   Main deck size: {len(deck.main_deck)}")
+    # Create players
+    deck1 = initialize_sample_deck()
+    player1 = Player("Player 1 (Doom)", deck1, player_id=0)
     
-    # Validate deck
-    if deck.validate():
-        print("✅ Deck is valid (100 cards)")
-    else:
-        print(f"❌ Deck is invalid ({len(deck.main_deck)} cards, expected 100)")
+    deck2 = initialize_sample_deck()
+    player2 = Player("Player 2 (Doom Clone)", deck2, player_id=1)
     
-    # Create player
-    print("\n👤 Creating player...")
-    player = Player("Player 1", deck, player_id=0)
-    print(f"✅ Player created: {player}")
-    print(f"   Starting life: {GameConstants.STARTING_LIFE_TOTAL}")
+    players = [player1, player2]
     
-    # Shuffle and draw opening hand
-    print("\n🔀 Shuffling deck...")
-    deck.shuffle()
-    print(f"✅ Deck shuffled (Library size: {deck.get_deck_size()})")
+    # Create simulator
+    simulator = CommanderSimulator(players)
     
-    print("\n📥 Drawing opening hand (7 cards)...")
-    opening_hand = player.deck.draw(GameConstants.OPENING_HAND_SIZE)
-    print(f"✅ Opening hand ({len(opening_hand)} cards):")
-    for card in opening_hand:
-        print(f"   - {card}")
+    # Start game
+    simulator.start()
     
-    print(f"\n📊 Game State:")
-    print(f"   Life: {player.life_total}")
-    print(f"   Hand: {player.get_hand_size()} cards")
-    print(f"   Library: {player.deck.get_deck_size()} cards")
-    print(f"   Battlefield: {player.get_battlefield_count()} cards")
-    print(f"   Graveyard: {player.get_graveyard_count()} cards")
+    # Simulate first 3 turns
+    print("\n🚀 Simulating 3 turns...")
+    for turn_num in range(1, 4):
+        if not simulator.next_turn():
+            break
     
-    # Simulate some damage
-    print("\n💥 Simulating damage...")
-    player.take_damage(5)
-    print(f"✅ Player took 5 damage: {player.life_total} life remaining")
-    
-    # Simulate life gain
-    print("\n💚 Simulating life gain...")
-    player.gain_life(3)
-    print(f"✅ Player gained 3 life: {player.life_total} life total")
-    
-    # Check if alive
-    print(f"\n🔍 Player status: {'Alive ✅' if player.is_alive() else 'Defeated ❌'}")
-    
-    print("\n🚀 Ready to simulate!")
-    print("(More features coming in Commit 2...)")
+    # Display final status
+    print(simulator.get_game_status())
+    print("✅ Simulation complete!")
+    print("(More features coming in Commit 3...)")
 
 
 if __name__ == "__main__":
