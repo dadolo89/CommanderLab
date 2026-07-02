@@ -67,14 +67,20 @@ def main():
     print("🎮 Welcome to CommanderLab Simulator!")
     print("="*60)
     
-    # Create players
+    # Create 4 players
     deck1 = initialize_sample_deck()
-    player1 = Player("Player 1 (Doom)", deck1, player_id=0)
+    player1 = Player("You (dadolo89)", deck1, player_id=0)
     
     deck2 = initialize_sample_deck()
-    player2 = Player("Player 2 (Doom Clone)", deck2, player_id=1)
+    player2 = Player("Player 2 (AI)", deck2, player_id=1)
     
-    players = [player1, player2]
+    deck3 = initialize_sample_deck()
+    player3 = Player("Player 3 (AI)", deck3, player_id=2)
+    
+    deck4 = initialize_sample_deck()
+    player4 = Player("Player 4 (AI)", deck4, player_id=3)
+    
+    players = [player1, player2, player3, player4]
     
     # Create simulator
     simulator = CommanderSimulator(players)
